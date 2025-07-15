@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offshore Wind & Hydrogen Digital Twin</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Three.js for 3D graphics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+
+    <style>
+        /* Custom styles for the futuristic theme */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a192f; /* Dark Navy Blue */
+            color: #e6f1ff; /* Light blueish white */
+        }
+        .hero-canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.3;
+        }
+        .glassmorphism {
+            background: rgba(10, 25, 47, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 191, 255, 0.2);
+        }
+        .neon-text {
+            text-shadow: 0 0 5px #64ffda, 0 0 10px #64ffda, 0 0 15px #64ffda;
+        }
+        .feature-card:hover, .ai-card:hover {
+            transform: translateY(-5px);
+            border-color: #64ffda;
+        }
+        .interactive-component {
+            position: absolute;
+            cursor: grab;
+            animation: float 6s ease-in-out infinite;
+            z-index: 10;
+        }
+        .interactive-component:active {
+            cursor: grabbing;
+            animation: none;
+        }
+        .component-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64ffda;
+            text-shadow: 0 0 5px #64ffda;
+            white-space: nowrap;
+        }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #64ffda;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        #connection-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        #simulation-container {
+            background-image: 
+                linear-gradient(rgba(100, 255, 218, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(100, 255, 218, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            animation: pan-grid 60s linear infinite;
+        }
+        #analyze-connection-btn {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes float {
+            0% { transform: translatey(0px); }
+            50% { transform: translatey(-10px); }
+            100% { transform: translatey(0px); }
+        }
+        @keyframes pan-grid {
+            from { background-position: 0 0; }
+            to { background-position: 240px 120px; }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Hero Section -->
+    <header class="relative h-screen flex items-center justify-center overflow-hidden">
+        <div class="hero-canvas-container" id="hero-canvas-container"></div>
+        <div class="relative z-10 text-center p-4">
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-4">The Future of Energy: <span class="text-[#64ffda]">Digitized</span></h1>
+            <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-300 mb-8">We are building the world's first comprehensive digital twin for offshore wind farms, seamlessly integrating power generation with green hydrogen production.</p>
+            <a href="#demo" class="bg-[#64ffda] text-[#0a192f] font-bold py-3 px-8 rounded-lg text-lg hover:bg-opacity-80 transition duration-300">See The Demo</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-20">
+        <!-- About Section -->
+        <section id="about" class="py-20">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="text-3xl md:text-4xl font-bold mb-4 text-[#64ffda]">The Vision</h2>
+                    <p class="text-gray-400 mb-4 leading-relaxed">Our digital twin provides a complete, real-time virtual replica of an offshore energy plant. By fusing sensor data with advanced physics-based models and AI, we unlock unprecedented levels of efficiency and foresight.</p>
+                    <p class="text-gray-400 leading-relaxed">This isn't just about monitoring; it's about predicting, optimizing, and controlling the entire energy lifecycle—from individual turbine performance to the complex chemical process of hydrogen electrolysis.</p>
+                </div>
+                <div class="p-4 glassmorphism rounded-xl"><img src="https://images.unsplash.com/photo-1629655599824-16453cd83a9a?q=80&w=1920&auto=format&fit=crop" onerror="this.onerror=null;this.src='https://placehold.co/600x400/0a192f/64ffda?text=Offshore+Platform';" alt="Offshore Wind Platform" class="rounded-lg shadow-2xl"></div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="py-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-[#64ffda]">Core Capabilities</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="feature-card glassmorphism p-6 rounded-lg border border-transparent transition duration-300"><h3 class="font-bold text-xl mb-2 text-white">Real-Time Monitoring</h3><p class="text-gray-400">Live data streams from every asset, providing a single source of truth for operational status.</p></div>
+                <div class="feature-card glassmorphism p-6 rounded-lg border border-transparent transition duration-300"><h3 class="font-bold text-xl mb-2 text-white">Predictive Maintenance</h3><p class="text-gray-400">AI algorithms forecast component failures, reducing downtime and maintenance costs.</p></div>
+                <div class="feature-card glassmorphism p-6 rounded-lg border border-transparent transition duration-300"><h3 class="font-bold text-xl mb-2 text-white">Power Optimization</h3><p class="text-gray-400">Optimize turbine pitch and yaw in real-time to maximize energy capture from changing wind conditions.</p></div>
+                <div class="feature-card glassmorphism p-6 rounded-lg border border-transparent transition duration-300"><h3 class="font-bold text-xl mb-2 text-white">Hydrogen Production</h3><p class="text-gray-400">Simulate and control electrolysis, diverting surplus energy to produce green hydrogen efficiently.</p></div>
+            </div>
+        </section>
+
+        <!-- Live Demo Section -->
+        <section id="demo" class="py-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 text-[#64ffda]">Digital Twin: Live Simulation</h2>
+            <p class="text-center text-gray-400 max-w-2xl mx-auto mb-12">Drag components to connect them and trigger AI analysis. Click a component to view its data.</p>
+            <div class="p-8 glassmorphism rounded-xl relative">
+                <div id="simulation-container" class="relative w-full max-w-4xl mx-auto aspect-[2/1] rounded-lg overflow-hidden">
+                    <img src="https://placehold.co/1200x600/0a192f/1e293b?text=" alt="Offshore Platform Layout" class="w-full h-full opacity-50">
+                    <canvas id="connection-canvas"></canvas>
+                    <div id="turbine-1" class="interactive-component" style="top: 20%; left: 25%;"><svg class="w-16 h-16 text-white hover:drop-shadow-[0_0_8px_#64ffda] transition-all" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586zM10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"/></svg><span class="component-label">Turbine 01</span></div>
+                    <div id="turbine-2" class="interactive-component" style="top: 45%; left: 15%;"><svg class="w-16 h-16 text-white hover:drop-shadow-[0_0_8px_#64ffda] transition-all" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586zM10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"/></svg><span class="component-label">Turbine 02</span></div>
+                    <div id="hydrogen-plant" class="interactive-component" style="top: 50%; left: 60%;"><svg class="w-20 h-20 text-white hover:drop-shadow-[0_0_8px_#64ffda] transition-all" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm10 10V6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2zm-4-5a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/></svg><span class="component-label">Hydrogen Unit</span></div>
+                </div>
+                <button id="analyze-connection-btn" class="bg-[#64ffda] text-[#0a192f] font-bold py-2 px-5 rounded-lg hover:bg-opacity-80 transition duration-300">✨ Analyze Connection</button>
+            </div>
+        </section>
+
+        <!-- AI Insights Section -->
+        <section id="ai-insights" class="py-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-12 text-[#64ffda]">✨ AI-Powered Insights</h2>
+            <div class="grid md:grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="ai-card glassmorphism p-6 rounded-lg border border-transparent transition duration-300 flex flex-col justify-between"><div><h3 class="font-bold text-xl mb-2 text-white">Generate Operational Summary</h3><p class="text-gray-400 mb-4">Let AI create a concise executive summary of the entire plant's current performance based on all available data.</p></div><button id="ai-summary-btn" class="mt-4 bg-[#64ffda] text-[#0a192f] font-bold py-2 px-4 rounded-lg hover:bg-opacity-80 transition duration-300 w-full">✨ Generate Summary</button></div>
+                <div class="ai-card glassmorphism p-6 rounded-lg border border-transparent transition duration-300 flex flex-col justify-between"><div><h3 class="font-bold text-xl mb-2 text-white">Suggest Maintenance Actions</h3><p class="text-gray-400 mb-4">Ask AI to analyze the data and suggest proactive maintenance tasks to prevent potential issues and optimize uptime.</p></div><button id="ai-maintenance-btn" class="mt-4 bg-[#64ffda] text-[#0a192f] font-bold py-2 px-4 rounded-lg hover:bg-opacity-80 transition duration-300 w-full">✨ Suggest Actions</button></div>
+            </div>
+        </section>
+        
+        <!-- Contact Section -->
+        <section id="contact" class="py-20">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 text-[#64ffda]">Get In Touch</h2>
+            <p class="text-center text-gray-400 max-w-2xl mx-auto mb-12">Have a question or want to collaborate? Send us a message.</p>
+            <form class="max-w-xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <input type="text" placeholder="Your Name" class="w-full p-3 bg-transparent border border-gray-600 rounded-lg focus:outline-none focus:border-[#64ffda] transition">
+                    <input type="email" placeholder="Your Email" class="w-full p-3 bg-transparent border border-gray-600 rounded-lg focus:outline-none focus:border-[#64ffda] transition">
+                </div>
+                <textarea placeholder="Your Message" rows="5" class="w-full p-3 bg-transparent border border-gray-600 rounded-lg focus:outline-none focus:border-[#64ffda] transition mb-6"></textarea>
+                <div class="text-center">
+                    <button type="submit" class="bg-[#64ffda] text-[#0a192f] font-bold py-3 px-8 rounded-lg text-lg hover:bg-opacity-80 transition duration-300">Send Message</button>
+                </div>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#081428] py-8 text-center text-gray-400"><p>&copy; 2024 Digital Twin Solutions. A demonstration for advanced energy systems.</p></footer>
+
+    <!-- Modals -->
+    <div id="data-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="glassmorphism rounded-xl w-full max-w-3xl border border-[#64ffda] shadow-2xl relative"><button id="close-data-modal" class="absolute top-4 right-4 text-white hover:text-[#64ffda] transition text-3xl leading-none">&times;</button><div class="p-8"><h3 id="modal-title" class="text-2xl font-bold mb-6 text-[#64ffda]"></h3><div class="grid md:grid-cols-3 gap-4 mb-6 text-center"><div><p class="text-sm text-gray-400" id="kpi-1-label">KPI 1</p><p class="text-2xl font-bold text-white" id="kpi-1-value">--</p></div><div><p class="text-sm text-gray-400" id="kpi-2-label">KPI 2</p><p class="text-2xl font-bold text-white" id="kpi-2-value">--</p></div><div><p class="text-sm text-gray-400" id="kpi-3-label">KPI 3</p><p class="text-2xl font-bold text-white" id="kpi-3-value">--</p></div></div><div class="h-64 md:h-80"><canvas id="data-chart"></canvas></div></div></div></div>
+    <div id="ai-modal" class="modal fixed inset-0 bg-black bg-opacity-70 items-center justify-center z-50 p-4"><div class="glassmorphism rounded-xl w-full max-w-3xl border border-[#64ffda] shadow-2xl relative"><button id="close-ai-modal" class="absolute top-4 right-4 text-white hover:text-[#64ffda] transition text-3xl leading-none">&times;</button><div class="p-8"><h3 id="ai-modal-title" class="text-2xl font-bold mb-6 text-[#64ffda]"></h3><div id="ai-modal-content" class="text-gray-300 leading-relaxed max-h-[60vh] overflow-y-auto"><div id="ai-loading-spinner" class="flex justify-center items-center h-48"><div class="spinner"></div></div></div></div></div></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // --- Three.js Hero Animation ---
+            let scene, camera, renderer, turbine, molecule, rotor;
+            const heroContainer = document.getElementById('hero-canvas-container');
+            function initHeroAnimation() { /* ... (unchanged) ... */
+                scene = new THREE.Scene(); camera = new THREE.PerspectiveCamera(75, heroContainer.clientWidth / heroContainer.clientHeight, 0.1, 1000); renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); renderer.setSize(heroContainer.clientWidth, heroContainer.clientHeight); heroContainer.appendChild(renderer.domElement); const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); scene.add(ambientLight); const pointLight = new THREE.PointLight(0x64ffda, 1, 100); pointLight.position.set(10, 10, 10); scene.add(pointLight); const turbineMaterial = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.4 }); const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.2, 4, 16), turbineMaterial); const nacelle = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 1), turbineMaterial); nacelle.position.y = 2; rotor = new THREE.Group(); rotor.position.set(0, 2, 0.5); const hubGeometry = new THREE.CylinderGeometry(0.25, 0.25, 0.3, 16); const hub = new THREE.Mesh(hubGeometry, turbineMaterial); hub.rotation.x = Math.PI / 2; rotor.add(hub); const bladeGeometry = new THREE.BoxGeometry(0.2, 2.5, 0.1).translate(0, 1.25, 0); for (let i = 0; i < 3; i++) { const blade = new THREE.Mesh(bladeGeometry, turbineMaterial); blade.rotation.z = (i * 2 * Math.PI) / 3; rotor.add(blade); } turbine = new THREE.Group(); turbine.add(tower, nacelle, rotor); turbine.position.x = -3; scene.add(turbine); const atomMaterial = new THREE.MeshStandardMaterial({ color: 0x64ffda, emissive: 0x64ffda, emissiveIntensity: 0.5 }); const sphere = new THREE.SphereGeometry(0.3, 16, 16); const atom1 = new THREE.Mesh(sphere, atomMaterial); atom1.position.x = -0.4; const atom2 = new THREE.Mesh(sphere, atomMaterial); atom2.position.x = 0.4; molecule = new THREE.Group(); molecule.add(atom1, atom2); molecule.position.x = 3; scene.add(molecule); camera.position.z = 7; animate();
+            }
+            function animate() { requestAnimationFrame(animate); if (rotor) { rotor.rotation.z -= 0.02; } if (turbine) { turbine.rotation.y += 0.001; } if (molecule) { molecule.rotation.x += 0.005; molecule.rotation.y += 0.005; } renderer.render(scene, camera); }
+            function onWindowResizeHero() { if (camera && renderer) { camera.aspect = heroContainer.clientWidth / heroContainer.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(heroContainer.clientWidth, heroContainer.clientHeight); } }
+            window.addEventListener('resize', onWindowResizeHero, false);
+            initHeroAnimation();
+
+            // --- Interactive Simulation Logic ---
+            const simContainer = document.getElementById('simulation-container');
+            const components = document.querySelectorAll('.interactive-component');
+            const connectionCanvas = document.getElementById('connection-canvas');
+            const ctx = connectionCanvas.getContext('2d');
+            const analyzeBtn = document.getElementById('analyze-connection-btn');
+            let activeComponent = null;
+            let isDragging = false;
+            let offsetX, offsetY;
+            let connections = [];
+            let lastConnection = null;
+
+            function resizeCanvas() {
+                connectionCanvas.width = simContainer.clientWidth;
+                connectionCanvas.height = simContainer.clientHeight;
+                drawConnections();
+            }
+
+            function drawConnections() {
+                ctx.clearRect(0, 0, connectionCanvas.width, connectionCanvas.height);
+                ctx.strokeStyle = '#64ffda';
+                ctx.lineWidth = 2;
+                ctx.shadowColor = '#64ffda';
+                ctx.shadowBlur = 10;
+                connections.forEach(conn => {
+                    const fromEl = document.getElementById(conn.from);
+                    const toEl = document.getElementById(conn.to);
+                    if (!fromEl || !toEl) return;
+                    const fromRect = fromEl.getBoundingClientRect();
+                    const toRect = toEl.getBoundingClientRect();
+                    const containerRect = simContainer.getBoundingClientRect();
+                    const fromX = fromRect.left + fromRect.width / 2 - containerRect.left;
+                    const fromY = fromRect.top + fromRect.height / 2 - containerRect.top;
+                    const toX = toRect.left + toRect.width / 2 - containerRect.left;
+                    const toY = toRect.top + toRect.height / 2 - containerRect.top;
+                    ctx.beginPath(); ctx.moveTo(fromX, fromY); ctx.lineTo(toX, toY); ctx.stroke();
+                });
+            }
+
+            components.forEach(comp => {
+                comp.addEventListener('mousedown', (e) => {
+                    if (e.target.closest('svg')) {
+                        isDragging = true; activeComponent = comp;
+                        const rect = activeComponent.getBoundingClientRect();
+                        offsetX = e.clientX - rect.left;
+                        offsetY = e.clientY - rect.top;
+                        activeComponent.style.zIndex = 20;
+                    }
+                });
+                comp.querySelector('svg').addEventListener('click', (e) => {
+                    if (!isDragging) { openDataModal(comp.id); }
+                });
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging && activeComponent) {
+                    e.preventDefault();
+                    const containerRect = simContainer.getBoundingClientRect();
+                    let x = e.clientX - containerRect.left - offsetX;
+                    let y = e.clientY - containerRect.top - offsetY;
+                    x = Math.max(0, Math.min(x, containerRect.width - activeComponent.offsetWidth));
+                    y = Math.max(0, Math.min(y, containerRect.height - activeComponent.offsetHeight));
+                    activeComponent.style.left = `${x}px`;
+                    activeComponent.style.top = `${y}px`;
+                    drawConnections();
+                }
+            });
+
+            document.addEventListener('mouseup', (e) => {
+                if (isDragging && activeComponent) {
+                    let connectionMade = false;
+                    components.forEach(target => {
+                        if (target !== activeComponent) {
+                            const rect1 = activeComponent.getBoundingClientRect();
+                            const rect2 = target.getBoundingClientRect();
+                            const overlap = !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
+                            if (overlap) {
+                                const newConnection = { from: activeComponent.id, to: target.id };
+                                if (!connections.some(c => (c.from === newConnection.from && c.to === newConnection.to) || (c.from === newConnection.to && c.to === newConnection.from))) {
+                                    connections.push(newConnection);
+                                    lastConnection = newConnection;
+                                    connectionMade = true;
+                                }
+                            }
+                        }
+                    });
+                    
+                    if (connectionMade) {
+                        analyzeBtn.style.display = 'block';
+                    }
+
+                    setTimeout(() => { isDragging = false; }, 10);
+                    activeComponent.style.zIndex = 10;
+                    activeComponent = null;
+                    drawConnections();
+                }
+            });
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            // --- Modal & AI Logic ---
+            const dataModal = document.getElementById('data-modal');
+            const closeDataModalBtn = document.getElementById('close-data-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const kpi1Label = document.getElementById('kpi-1-label'), kpi1Value = document.getElementById('kpi-1-value');
+            const kpi2Label = document.getElementById('kpi-2-label'), kpi2Value = document.getElementById('kpi-2-value');
+            const kpi3Label = document.getElementById('kpi-3-label'), kpi3Value = document.getElementById('kpi-3-value');
+            const chartCanvas = document.getElementById('data-chart');
+            let dataChart = null;
+            const simData = {
+                'turbine-1': { name: 'Turbine 01', title: 'Turbine 01 - Live Data', kpis: { 'Power Output': '11.8 MW', 'Wind Speed': '12.5 m/s', 'Blade RPM': '14.2' }, chart: { label: 'Power Output (MW)', data: Array.from({length: 30}, () => Math.random() * 1.5 + 11) } }, 
+                'turbine-2': { name: 'Turbine 02', title: 'Turbine 02 - Live Data', kpis: { 'Power Output': '12.1 MW', 'Wind Speed': '12.8 m/s', 'Blade RPM': '14.5' }, chart: { label: 'Power Output (MW)', data: Array.from({length: 30}, () => Math.random() * 1.5 + 11.2) } }, 
+                'hydrogen-plant': { name: 'Hydrogen Unit', title: 'Hydrogen Unit - Live Data', kpis: { 'H2 Production': '250 kg/hr', 'Energy Consumption': '12.5 MWh', 'Purity': '99.97%' }, chart: { label: 'Hydrogen Production (kg/hr)', data: Array.from({length: 30}, () => Math.random() * 20 + 240) } }
+            };
+            function openDataModal(id) { /* ... (unchanged) ... */
+                const data = simData[id]; if (!data) return; modalTitle.textContent = data.title; const kpiKeys = Object.keys(data.kpis); kpi1Label.textContent = kpiKeys[0]; kpi1Value.textContent = data.kpis[kpiKeys[0]]; kpi2Label.textContent = kpiKeys[1]; kpi2Value.textContent = data.kpis[kpiKeys[1]]; kpi3Label.textContent = kpiKeys[2]; kpi3Value.textContent = data.kpis[kpiKeys[2]]; const labels = Array.from({length: 30}, (_, i) => new Date(new Date().getTime() - (29 - i) * 60000)); if (dataChart) dataChart.destroy(); dataChart = new Chart(chartCanvas, { type: 'line', data: { labels: labels, datasets: [{ label: data.chart.label, data: data.chart.data, borderColor: '#64ffda', backgroundColor: 'rgba(100, 255, 218, 0.1)', fill: true, tension: 0.4, pointRadius: 0 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'minute', tooltipFormat: 'PPpp' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#e6f1ff' } }, y: { beginAtZero: false, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#e6f1ff' } } }, plugins: { legend: { labels: { color: '#e6f1ff' } } } } }); dataModal.classList.add('active');
+            }
+            closeDataModalBtn.addEventListener('click', () => dataModal.classList.remove('active'));
+            const aiModal = document.getElementById('ai-modal');
+            const closeAiModalBtn = document.getElementById('close-ai-modal');
+            async function getAiInsight(prompt, title) { /* ... (unchanged) ... */
+                document.getElementById('ai-modal-title').textContent = title; const content = document.getElementById('ai-modal-content'); const spinner = document.getElementById('ai-loading-spinner'); content.innerHTML = ''; content.appendChild(spinner); spinner.style.display = 'flex'; aiModal.classList.add('active'); let chatHistory = [{ role: "user", parts: [{ text: prompt }] }]; const payload = { contents: chatHistory }; const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`; try { const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!response.ok) { throw new Error(`API request failed with status ${response.status}`); } const result = await response.json(); let text = 'Sorry, I could not retrieve an insight at this moment.'; if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) { text = result.candidates[0].content.parts[0].text; } content.innerHTML = text.replace(/\n/g, '<br>'); } catch (error) { console.error("Gemini API Error:", error); content.innerHTML = `An error occurred while fetching the AI insight. Please check the console for details.`; } finally { spinner.style.display = 'none'; }
+            }
+            document.getElementById('ai-summary-btn').addEventListener('click', () => { getAiInsight(`You are an operations manager for an advanced offshore energy facility. Based on the following real-time data from the digital twin, provide a concise executive summary (3-4 sentences) of the plant's overall status. Highlight any key positive or negative points.\n\nData:\n${JSON.stringify(simData, null, 2)}`, 'Operational Summary'); });
+            document.getElementById('ai-maintenance-btn').addEventListener('click', () => { getAiInsight(`You are a senior maintenance engineer for an offshore energy platform. Analyze the following live data from our digital twin. Based on these numbers, suggest 2-3 specific, proactive maintenance actions or checks we should prioritize in the next 24 hours. Provide a brief justification for each suggestion.\n\nData:\n${JSON.stringify(simData, null, 2)}`, 'Maintenance Suggestions'); });
+            
+            analyzeBtn.addEventListener('click', () => {
+                if (lastConnection) {
+                    const fromData = simData[lastConnection.from];
+                    const toData = simData[lastConnection.to];
+                    const connectionData = { [fromData.name]: fromData.kpis, [toData.name]: toData.kpis };
+                    const prompt = `You are an energy systems analyst. I've just connected two components in our digital twin: ${fromData.name} and ${toData.name}. Based on their current data, analyze the relationship and efficiency between them. For example, is the power producer adequately supplying the consumer? Are there any mismatches or optimization opportunities? Provide a brief, insightful analysis.\n\nLive Data:\n${JSON.stringify(connectionData, null, 2)}`;
+                    getAiInsight(`Analysis: ${fromData.name} ↔ ${toData.name}`, `Connection Analysis`);
+                }
+            });
+
+            closeAiModalBtn.addEventListener('click', () => aiModal.classList.remove('active'));
+            document.addEventListener('keydown', (e) => { if (e.key === "Escape") { dataModal.classList.remove('active'); aiModal.classList.remove('active'); } });
+        });
+    </script>
+</body>
+</html>
+
